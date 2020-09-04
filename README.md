@@ -4,7 +4,7 @@
 
 Inspired by Rust's `Result<T, E>` [type](https://doc.rust-lang.org/std/result/enum.Result.html) and the [returns](https://github.com/dry-python/returns) python library.
 
-With only 126 lines, the source code is very minimal and easy to read. Every function/method is documented. In fact, the 'mathematical laws' section in the tests might be harder to understand than the source!
+With only 141 lines, the source code is very minimal and easy to read. Every function/method is documented. In fact, the 'mathematical laws' section in the tests might be harder to understand than the source!
 
 ## Features
 
@@ -63,7 +63,7 @@ julia> unwrap(e)
 ERROR: Unwrapping on an Err but expecting Ok!
 ```
 
-Read the 126-line source code and tests for more.
+Read the 141-line source code and tests for more.
 
 The `safe` function catches any exceptions and returns the Exception wrapped in an `Err`.
 
