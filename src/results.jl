@@ -77,8 +77,8 @@ or(r::Err, other::Err)::Err = other
 
 """Get the wrapped value inside an Ok, or raise on an Err.
 Ok{T} -> T"""
-unwrap(r::Ok{T} where T)::T where T = r.value
-unwrap(r::Err{E} where E)::E where E = error("Unwrapping on an Err but expecting Ok!")
+unwrap(r::Ok) = r.value
+unwrap(r::Err) = error("Unwrapping on an Err but expecting Ok!")
 
 """Get the wrapped value inside an Ok, or use a given default on an Err.
 Ok{T}, _ -> T

@@ -83,3 +83,9 @@ Err{ErrorException}(ErrorException("Divide by zero"))
 julia> alter(res, e -> e.msg)
 Err{String}("Divide by zero")
 ```
+
+## FAQ
+
+Q: Why are some functions not annotated with return types?
+
+A: They either return T from Ok{T}, or E from Err{E}, or a given default, or the result of a given function. Julia doesn't seem to support annotating functions. For Ok{T} and Err{E}, the syntax is something like `unwrap(r::Ok{T} where T)::T where T = r.value`. All those `where`s that does nothing really adds to the line noise. The docstrings will clarify the types for Ok and Err anyway.
