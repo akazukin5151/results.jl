@@ -40,25 +40,29 @@ is_err(r::Result)::Bool = !is_ok(r)
 # Like rust's map, it does not touch an Err
 # Ok{T}, fn{T -> U} -> Ok{U}
 # Err{E}, _ -> Err{E}
-map(r::Ok, fn::Function)::Ok = Ok(fn(r.value))
-map(r::Err, fn::Function)::Err = r
+map(fn::Function, r::Ok)::Ok = Ok(fn(r.value))
+map(fn::Function, r::Err)::Err = r
 
 # This is a true functor map that applies for both Ok and Err
 # Result{T, E}, fn{T -> U} -> Result{U, E}
-fmap(r::Ok, fn::Function)::Ok = Ok(fn(r.value))
-fmap(r::Err, fn::Function)::Err = Err(fn(r.err))
+fmap(fn::Function, r::Ok)::Ok = Ok(fn(r.value))
+fmap(fn::Function, r::Err)::Err = Err(fn(r.err))
 
-# Monadic bind
+# Monadic bind. The word form adheres to Julia conventions by having the function as the
+# first argument so the `do` notation can be used.
+# The operator form adheres to Haskell conventions by having the function as the
+# second argument. The operator can be used as an infix operator, however note that
+# precedence is low and should always be surrounded by brackets
 # Result{T, E}, fn{T -> Result{U, E}} -> Result{U, E}
-bind(r::Ok, fn::Function)::Result = fn(r.value)
-bind(r::Err, fn::Function)::Result = fn(r.err)
-(≻)(r::Ok, fn::Function)::Result = bind(r, fn)
-(≻)(r::Err, fn::Function)::Result = bind(r, fn)
+bind(fn::Function, r::Ok)::Result = fn(r.value)
+bind(fn::Function, r::Err)::Result = fn(r.err)
+(≻)(r::Ok, fn::Function)::Result = bind(fn, r)
+(≻)(r::Err, fn::Function)::Result = bind(fn, r)
 
 # Result{Result{T, E}, E} -> Result{T, E}
 # Called `flatten` in Rust
 # Flattens a nested Result into a single Result
-join(nested_r::Result)::Result = bind(nested_r, (x) -> x)
+join(nested_r::Result)::Result = bind((x) -> x, nested_r)
 
 # If both results are Ok, return the other one
 # Otherwise, return the first error
@@ -88,8 +92,8 @@ unwrap_or(r::Err, default) = default
 # Use this if the default comes from a function
 # Ok{T}, _ -> T
 # Err{E}, fn{E -> F} -> F
-unwrap_or_do(r::Ok, fn::Function) = r.value
-unwrap_or_do(r::Err, fn::Function) = fn(r.err)
+unwrap_or_do(fn::Function, r::Ok) = r.value
+unwrap_or_do(fn::Function, r::Err) = fn(r.err)
 
 # Same as Rust
 # Take the error value
@@ -108,16 +112,17 @@ expect(r::Err, msg::AbstractString) = error(msg)
 # Result{T, E}, fn{E -> F} -> Result{T, F}
 # Ok{T}, _ -> T
 # Err{E}, fn{E -> F} -> Err{F}
-alter(r::Ok, fn::Function)::Ok = r
-alter(r::Err, fn::Function)::Err = Err(fn(r.err))
+alter(fn::Function, r::Ok)::Ok = r
+alter(fn::Function, r::Err)::Err = Err(fn(r.err))
 
 # Applies function to value if Ok, else return default
 # Ok{T}, _, fn{T -> U} -> U
 # Err{E}, F, _ -> F
-map_or(r::Ok, default, fn::Function) = fn(r.value)
-map_or(r::Err, default, fn::Function) = default
+map_or(fn::Function, r::Ok, default) = fn(r.value)
+map_or(fn::Function, r::Err, default) = default
 
 # Applies first function to value if Ok, else apply second function to error
+# Note that the two function arguments are not the first, contrary to Julia conventions
 # Called `map_or_else` in Rust
 # Ok{T}, fn{T -> U}, _ -> T
 # Err{E}, _, fn{E -> F} -> F

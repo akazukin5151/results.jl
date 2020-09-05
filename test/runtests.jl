@@ -23,27 +23,27 @@ using results: map, bind, join, ≻
 
     # Functor law: fmap id = id
     id(x) = x
-    @test map(Ok(2), id) == fmap(Ok(2), id) == Ok(2)
-    @test map(Err(2), id) == fmap(Err(2), id) == Err(2)
+    @test map(id, Ok(2)) == fmap(id, Ok(2)) == Ok(2)
+    @test map(id, Err(2)) == fmap(id, Err(2)) == Err(2)
 
     # Functor law: fmap (f . g) x = fmap f (fmap g x)
     f(x) = x + 10
     g(x) = x * 10
-    @test map(Ok(2), f∘g) == map(map(Ok(2), g), f)
-    @test map(Err(2), f∘g) == map(map(Err(2), g), f)
-    @test fmap(Ok(2), f∘g) == fmap(fmap(Ok(2), g), f)
-    @test fmap(Err(2), f∘g) == fmap(fmap(Err(2), g), f)
+    @test map(f∘g, Ok(2)) == map(f, map(g, Ok(2)))
+    @test map(f∘g, Err(2)) == map(f, map(g, Err(2)))
+    @test fmap(f∘g, Ok(2)) == fmap(f, fmap(g, Ok(2)))
+    @test fmap(f∘g, Err(2)) == fmap(f, fmap(g, Err(2)))
 
     # Defining fmap in terms of bind
     # fmap f x = x >>= (return . f)
-    @test fmap(Ok(2), f) == bind(Ok(2), Ok∘f)
-    @test fmap(Err(2), f) == bind(Err(2), Err∘f)
+    @test fmap(f, Ok(2)) == (Ok(2) ≻ Ok∘f)
+    @test fmap(f, Err(2)) == (Err(2) ≻ Err∘f)
 
     # Defining join with bind
     # join x = x >>= id
-    @test join(Ok(Ok(2))) == bind(Ok(Ok(2)), id) == Ok(2)
+    @test join(Ok(Ok(2))) == (Ok(Ok(2)) ≻ id)
     # join (fmap g m) = m >>= g
-    @test join(map(Ok(2), h)) == bind(Ok(2), h)
+    @test join(map(h, Ok(2))) == (Ok(2) ≻ h)
 end
 
 @testset "Identities" begin
@@ -58,24 +58,40 @@ end
 
 @testset "Map" begin
     v = Ok(2)
-    @test map(v, r -> 10) == Ok(10)
-    @test map_or(v, 11, x -> x * 3) == 6
+    @test map(v) do x
+        x + 10
+    end == Ok(12)
+    @test map_or(v, 11) do x
+        x * 3
+    end == 6
     @test map_or_do(v, v -> v^2, e -> e - 1) == 4
 
     e = Err(3)
-    @test map(e, r -> 10) == Err(3)
-    @test map_or(e, 11, x -> x * 3) == 11
+    @test map(e) do x
+        x + 10
+    end == Err(3)
+    @test map_or(e, 11) do x
+        x * 3
+    end == 11
     @test map_or_do(e, v -> v^2, e -> e - 1) == 2
 end
 
 @testset "Bind" begin
     v = Ok(2)
-    @test bind(v, x -> Ok(x * 2)) == Ok(4)
-    @test bind(v, x -> Err(x * 2)) == Err(4)
+    @test bind(v) do x
+        Ok(x * 2)
+    end == Ok(4)
+    @test bind(v) do x
+        Err(x * 2)
+    end == Err(4)
 
     e = Err(3)
-    @test bind(e, x -> Ok(x * 2)) == Ok(6)
-    @test bind(e, x -> Err(x * 2)) == Err(6)
+    @test bind(e) do x
+        Ok(x * 2)
+    end == Ok(6)
+    @test bind(e) do x
+        Err(x * 2)
+    end == Err(6)
 end
 
 @testset "Join" begin
@@ -106,13 +122,17 @@ end
     @test unwrap(v) == 2
     @test_throws Exception unwrap_err(v)
     @test unwrap_or(v, 10) == 2
-    @test unwrap_or_do(v, x -> x + 1) == 2
+    @test unwrap_or_do(v) do x
+        x + 1
+    end == 2
 
     e = Err(3)
     @test_throws Exception unwrap(e)
     @test unwrap_err(e) == 3
     @test unwrap_or(e, 10) == 10
-    @test unwrap_or_do(e, x -> x + 1) == 4
+    @test unwrap_or_do(e) do x
+        x + 1
+    end == 4
 end
 
 @testset "Expect" begin
@@ -121,8 +141,12 @@ end
 end
 
 @testset "Alter" begin
-    @test alter(Ok(2), e -> e + 1) == Ok(2)
-    @test alter(Err(3), e -> e + 1) == Err(4)
+    @test alter(Ok(2)) do e
+        e + 1
+    end == Ok(2)
+    @test alter(Err(3)) do e
+        e + 1
+    end == Err(4)
 end
 
 @testset "Safe" begin
@@ -132,5 +156,5 @@ end
 
     @test safe(reciprocal)(2) == Ok(0.5)
     @test safe(reciprocal)(0) |> is_err
-    @test alter(safe(reciprocal)(0), e -> e.msg) == Err("Divide by zero")
+    @test alter(safe(reciprocal)(0)) do e; e.msg end == Err("Divide by zero")
 end
