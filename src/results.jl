@@ -38,13 +38,13 @@ is_ok(r::Err)::Bool = false
 is_err(r::Result)::Bool = !is_ok(r)
 
 # Like rust's map, it does not touch an Err
-# Ok{T}, fn{T -> U} -> Ok{U}
-# Err{E}, _ -> Err{E}
+# fn{T -> U}, Ok{T} -> Ok{U}
+# _, Err{E} -> Err{E}
 map(fn::Function, r::Ok)::Ok = Ok(fn(r.value))
 map(fn::Function, r::Err)::Err = r
 
 # This is a true functor map that applies for both Ok and Err
-# Result{T, E}, fn{T -> U} -> Result{U, E}
+# fn{T -> U}, Result{T, E} -> Result{U, E}
 fmap(fn::Function, r::Ok)::Ok = Ok(fn(r.value))
 fmap(fn::Function, r::Err)::Err = Err(fn(r.err))
 
@@ -53,11 +53,12 @@ fmap(fn::Function, r::Err)::Err = Err(fn(r.err))
 # The operator form adheres to Haskell conventions by having the function as the
 # second argument. The operator can be used as an infix operator, however note that
 # precedence is low and should always be surrounded by brackets
-# Result{T, E}, fn{T -> Result{U, E}} -> Result{U, E}
+# fn{T -> Result{U, E}}, Result{T, E} -> Result{U, E}
 bind(fn::Function, r::Ok)::Result = fn(r.value)
 bind(fn::Function, r::Err)::Result = fn(r.err)
 (≻)(r::Ok, fn::Function)::Result = bind(fn, r)
 (≻)(r::Err, fn::Function)::Result = bind(fn, r)
+# Result{T, E}, fn{T -> Result{U, E}} -> Result{U, E}
 
 # Result{Result{T, E}, E} -> Result{T, E}
 # Called `flatten` in Rust
@@ -90,8 +91,8 @@ unwrap_or(r::Err, default) = default
 
 # Called `unwrap_or_else` in Rust
 # Use this if the default comes from a function
-# Ok{T}, _ -> T
-# Err{E}, fn{E -> F} -> F
+# _, Ok{T} -> T
+# fn{E -> F}, Err{E} -> F
 unwrap_or_do(fn::Function, r::Ok) = r.value
 unwrap_or_do(fn::Function, r::Err) = fn(r.err)
 
@@ -109,15 +110,15 @@ expect(r::Ok, msg::AbstractString) = r.value
 expect(r::Err, msg::AbstractString) = error(msg)
 
 # Called `map_err` in Rust
-# Result{T, E}, fn{E -> F} -> Result{T, F}
-# Ok{T}, _ -> T
-# Err{E}, fn{E -> F} -> Err{F}
+# fn{E -> F}, Result{T, E} -> Result{T, F}
+# _, Ok{T} -> T
+# fn{E -> F}, Err{E} -> Err{F}
 alter(fn::Function, r::Ok)::Ok = r
 alter(fn::Function, r::Err)::Err = Err(fn(r.err))
 
 # Applies function to value if Ok, else return default
-# Ok{T}, _, fn{T -> U} -> U
-# Err{E}, F, _ -> F
+# fn{T -> U}, Ok{T}, _ -> U
+# _, Err{E}, F, -> F
 map_or(fn::Function, r::Ok, default) = fn(r.value)
 map_or(fn::Function, r::Err, default) = default
 
