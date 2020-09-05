@@ -40,13 +40,13 @@ is_err(r::Result)::Bool = !is_ok(r)
 # Like rust's map, it does not touch an Err
 # Ok{T}, fn{T -> U} -> Ok{U}
 # Err{E}, _ -> Err{E}
-map(r::Ok, fn::Function)::Result = Ok(fn(r.value))
-map(r::Err, fn::Function)::Result = r
+map(r::Ok, fn::Function)::Ok = Ok(fn(r.value))
+map(r::Err, fn::Function)::Err = r
 
 # This is a true functor map that applies for both Ok and Err
 # Result{T, E}, fn{T -> U} -> Result{U, E}
-fmap(r::Ok, fn::Function)::Result = Ok(fn(r.value))
-fmap(r::Err, fn::Function)::Result = Err(fn(r.err))
+fmap(r::Ok, fn::Function)::Ok = Ok(fn(r.value))
+fmap(r::Err, fn::Function)::Err = Err(fn(r.err))
 
 # Monadic bind
 # Result{T, E}, fn{T -> Result{U, E}} -> Result{U, E}
