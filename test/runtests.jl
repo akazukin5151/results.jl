@@ -1,7 +1,7 @@
 using Test
 
 using results
-using results: map, bind, join, ≻
+using results: map, bind, join, ≻, @safe
 
 
 @testset "Mathematical laws" begin
@@ -157,4 +157,11 @@ end
     @test safe(reciprocal)(2) == Ok(0.5)
     @test safe(reciprocal)(0) |> is_err
     @test alter(safe(reciprocal)(0)) do e; e.msg end == Err("Divide by zero")
+end
+
+@testset "macro" begin
+    reciprocal(x) = x == 0 ? error("Divide by zero") : 1 / x
+    @test @safe(reciprocal(2)) == Ok(0.5)
+    @test @safe(reciprocal(0)) |> is_err
+    @test alter(@safe(reciprocal(0))) do e; e.msg end == Err("Divide by zero")
 end

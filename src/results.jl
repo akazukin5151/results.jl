@@ -142,4 +142,16 @@ function safe(unsafe_fn::Function)
     return wrapper
 end
 
+"""Wraps an expression that might raise an exception to prevent it from doing so
+Returns Ok(...) on success, else return the exception inside Err(...)"""
+macro safe(ex)
+   quote
+       try
+           Ok($(esc(ex)))
+       catch e
+           Err(e)
+       end
+   end
+end
+
 end # module
