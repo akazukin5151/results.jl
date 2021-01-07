@@ -1,7 +1,7 @@
 using Test
 
 using results
-using results: map, bind, join, ≻, @safe
+using results: map, bind, join
 
 
 @testset "Mathematical laws" begin

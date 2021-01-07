@@ -7,6 +7,7 @@ export is_ok,
        fmap,
        bind,
        join,
+       ≻,
        and,
        or,
        unwrap,
@@ -17,7 +18,8 @@ export is_ok,
        alter,
        map_or,
        map_or_do,
-       safe
+       safe,
+       @safe
 
 
 abstract type Result{T, E} end
