@@ -4,7 +4,7 @@
 
 Inspired by Rust's `Result<T, E>` [type](https://doc.rust-lang.org/std/result/enum.Result.html) and the [returns](https://github.com/dry-python/returns) python library.
 
-With only 145 lines, the source code is very minimal and easy to read. Every function/method is documented. In fact, the 'mathematical laws' section in the tests might be harder to understand than the source!
+With only 157 lines, the source code is very minimal and easy to read. Every function/method is documented. In fact, the 'mathematical laws' section in the tests might be harder to understand than the source!
 
 ## Features
 
@@ -38,7 +38,7 @@ There are no dependencies, but you may want to use Lazy.jl for better piping.
 
 ```jl
 julia> using results
-julia> using results: map, bind, ≻
+julia> using results: map, bind
 julia> might_fail(x) = x > 3 ? Err("Value too large!") : Ok(x + 1)
 
 julia> v = might_fail(1)
@@ -47,10 +47,10 @@ Ok{Int64}(2)
 julia> e = might_fail(10)
 Err{String}("Value too large!")
 
-julia> map(v, x -> x * 2)
+julia> map(x -> x * 2, v)
 Ok{Int64}(4)
 
-julia> bind(e, x -> Ok(length(x)))  # Fixing the error
+julia> bind(x -> Ok(length(x)), e)  # Fixing the error
 Ok{Int64}(16)
 
 julia> e ≻ x -> Err(string(x, " hello world"))  # Fancy bind operator
@@ -63,9 +63,9 @@ julia> unwrap(e)
 ERROR: Unwrapping on an Err but expecting Ok!
 ```
 
-Read the 145-line source code and tests for more.
+Read the 157-line source code and tests for more.
 
-The `safe` function catches any exceptions and returns the Exception wrapped in an `Err`.
+The `safe` function catches any exceptions and returns the Exception wrapped in an `Err`. The `@safe` macro does the same thing but for any expression.
 
 ```jl
 # In julia, dividing by zero returns infinity,
@@ -77,10 +77,13 @@ julia> reciprocal(x) = x == 0 ? error("Divide by zero") : 1 / x
 julia> safe(reciprocal)(2)
 Ok{Float64}(0.5)
 
-julia> res = safe(reciprocal)(0)
+julia> @safe reciprocal(2)
+Ok{Float64}(0.5)
+
+julia> res = @safe reciprocal(0)
 Err{ErrorException}(ErrorException("Divide by zero"))
 
-julia> alter(res, e -> e.msg)
+julia> alter(e -> e.msg, res)
 Err{String}("Divide by zero")
 ```
 
